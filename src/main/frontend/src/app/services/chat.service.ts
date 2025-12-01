@@ -59,14 +59,17 @@ export class ChatService {
               if (line.startsWith('event:')) {
                 currentEvent = line.substring(6).trim();
               } else if (line.startsWith('data:')) {
-                const data = line.substring(5).trim();
-                if (data) {
-                  if (currentEvent === 'error') {
-                    observer.error(new Error(data));
-                    return;
-                  }
-                  observer.next(data);
+                // Per SSE spec, remove "data:" and optional leading space
+                let data = line.substring(5);
+                if (data.startsWith(' ')) {
+                  data = data.substring(1);
                 }
+                if (currentEvent === 'error') {
+                  observer.error(new Error(data));
+                  return;
+                }
+                // Emit the data (could be empty for blank lines)
+                observer.next(data);
                 currentEvent = ''; // Reset after processing
               }
             }
