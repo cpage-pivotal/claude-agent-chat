@@ -1,7 +1,14 @@
+:host {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
 .chat-container {
   display: flex;
   flex-direction: column;
   height: 100%;
+  width: 100%;
   max-width: 1200px;
   margin: 0 auto;
   padding: var(--mat-sys-spacing-4, 16px);

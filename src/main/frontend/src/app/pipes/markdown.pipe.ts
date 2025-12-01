@@ -10,7 +10,6 @@ export class MarkdownPipe implements PipeTransform {
   constructor(private sanitizer: DomSanitizer) {
     // Configure marked options for better rendering
     marked.setOptions({
-      breaks: true, // Convert \n to <br>
       gfm: true // Use GitHub Flavored Markdown
     });
   }
@@ -21,8 +20,13 @@ export class MarkdownPipe implements PipeTransform {
     }
 
     try {
+      // Pre-process to fix bold markers with spaces inside
+      // Transform "** text**" or "**text **" to "**text**"
+      let processed = value.replace(/\*\*\s+/g, '**');
+      processed = processed.replace(/\s+\*\*/g, '**');
+
       // Parse markdown to HTML
-      const html = marked.parse(value, { async: false }) as string;
+      const html = marked.parse(processed, { async: false }) as string;
 
       // Sanitize and return as SafeHtml
       return this.sanitizer.sanitize(1, html) || '';
