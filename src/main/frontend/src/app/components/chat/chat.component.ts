@@ -7,6 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatCardModule } from '@angular/material/card';
 import { ChatService, ChatMessage } from '../../services/chat.service';
+import { MarkdownPipe } from '../../pipes/markdown.pipe';
 
 @Component({
   selector: 'app-chat',
@@ -18,7 +19,8 @@ import { ChatService, ChatMessage } from '../../services/chat.service';
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    MatCardModule
+    MatCardModule,
+    MarkdownPipe
   ],
   templateUrl: './chat.component.html',
   styleUrl: './chat.component.scss'
@@ -86,7 +88,7 @@ export class ChatComponent {
               ...msgs.slice(0, -1),
               {
                 ...lastMsg,
-                content: lastMsg.content + chunk
+                content: lastMsg.content + chunk + '\n'
               }
             ];
           }

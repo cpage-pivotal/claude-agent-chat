@@ -128,10 +128,105 @@
   word-wrap: break-word;
   font: var(--mat-sys-body-medium);
   line-height: 1.5;
-  
+
   &:empty::after {
     content: '\00a0';
     animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  // Markdown elements styling
+  a {
+    color: var(--mat-sys-primary);
+    text-decoration: underline;
+    transition: color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &:hover {
+      color: var(--mat-sys-primary-container);
+    }
+  }
+
+  p {
+    margin: 0 0 var(--mat-sys-spacing-2, 8px) 0;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  ul, ol {
+    margin: var(--mat-sys-spacing-2, 8px) 0;
+    padding-left: var(--mat-sys-spacing-4, 16px);
+  }
+
+  li {
+    margin: var(--mat-sys-spacing-1, 4px) 0;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    margin: var(--mat-sys-spacing-3, 12px) 0 var(--mat-sys-spacing-2, 8px) 0;
+    font-weight: 600;
+
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+
+  h1 { font: var(--mat-sys-headline-large); }
+  h2 { font: var(--mat-sys-headline-medium); }
+  h3 { font: var(--mat-sys-headline-small); }
+  h4 { font: var(--mat-sys-title-large); }
+  h5 { font: var(--mat-sys-title-medium); }
+  h6 { font: var(--mat-sys-title-small); }
+
+  code {
+    background-color: var(--mat-sys-surface-container-highest);
+    padding: 2px 6px;
+    border-radius: var(--mat-sys-corner-extra-small, 4px);
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.9em;
+  }
+
+  pre {
+    background-color: var(--mat-sys-surface-container-highest);
+    padding: var(--mat-sys-spacing-3, 12px);
+    border-radius: var(--mat-sys-corner-medium, 8px);
+    overflow-x: auto;
+    margin: var(--mat-sys-spacing-2, 8px) 0;
+
+    code {
+      background-color: transparent;
+      padding: 0;
+    }
+  }
+
+  blockquote {
+    border-left: 4px solid var(--mat-sys-outline);
+    padding-left: var(--mat-sys-spacing-3, 12px);
+    margin: var(--mat-sys-spacing-2, 8px) 0;
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid var(--mat-sys-outline-variant);
+    margin: var(--mat-sys-spacing-3, 12px) 0;
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: var(--mat-sys-spacing-2, 8px) 0;
+  }
+
+  th, td {
+    border: 1px solid var(--mat-sys-outline-variant);
+    padding: var(--mat-sys-spacing-2, 8px);
+    text-align: left;
+  }
+
+  th {
+    background-color: var(--mat-sys-surface-container-high);
+    font-weight: 600;
   }
 }
 
