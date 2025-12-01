@@ -138,10 +138,24 @@
   a {
     color: var(--mat-sys-primary);
     text-decoration: underline;
-    transition: color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    text-underline-offset: 2px;
+    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
+    // Material 3 state layer - hover
     &:hover {
-      color: var(--mat-sys-primary-container);
+      opacity: 0.8;
+    }
+
+    // Material 3 state layer - focus (accessibility)
+    &:focus-visible {
+      outline: 2px solid var(--mat-sys-primary);
+      outline-offset: 2px;
+      border-radius: var(--mat-sys-corner-extra-small, 4px);
+    }
+
+    // Material 3 state layer - active
+    &:active {
+      opacity: 0.6;
     }
   }
 
