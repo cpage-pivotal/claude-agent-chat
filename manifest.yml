@@ -1,0 +1,16 @@
+---
+applications:
+  - name: claude-agent-chat
+    path: target/claude-agent-chat-1.0.0.jar
+    memory: 3G
+    buildpacks:
+      - nodejs_buildpack
+      - https://github.com/cpage-pivotal/claude-code-buildpack
+      - java_buildpack_offline
+    env:
+      JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 21.+ } }'
+
+      # Required: Anthropic API Key for Claude Code CLI
+      ANTHROPIC_API_KEY: ((ANTHROPIC_API_KEY))
+      
+

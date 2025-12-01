@@ -8,16 +8,30 @@
         <version>3.5.5</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>com.example</groupId>
-    <artifactId>hello-world-starter</artifactId>
+    <groupId>org.tanzu</groupId>
+    <artifactId>claude-agent-chat</artifactId>
     <version>1.0.0</version>
-    <name>hello-world-starter</name>
+    <name>claude-agent-chat</name>
     <description>Hello World Spring Boot + Angular starter project</description>
 
     <properties>
         <java.version>21</java.version>
         <node.version>v22.12.0</node.version>
     </properties>
+
+    <repositories>
+        <repository>
+            <id>gcp-maven-public</id>
+            <name>GCP Artifact Registry - Public Maven Repository</name>
+            <url>https://us-central1-maven.pkg.dev/cf-mcp/maven-public</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 
     <dependencies>
         <dependency>
@@ -27,6 +41,11 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.tanzu.claudecode</groupId>
+            <artifactId>claude-code-cf-wrapper</artifactId>
+            <version>1.0.0</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -82,6 +101,30 @@
                         </goals>
                         <configuration>
                             <arguments>run build</arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Copy Angular build output to Spring Boot static resources -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-frontend-build</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.outputDirectory}/static</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/frontend/dist/frontend/browser</directory>
+                                    <filtering>false</filtering>
+                                </resource>
+                            </resources>
                         </configuration>
                     </execution>
                 </executions>

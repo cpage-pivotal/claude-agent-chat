@@ -1,2 +1,12 @@
+<div class="app-container">
+  <mat-toolbar color="primary" class="app-toolbar">
+    <mat-icon class="toolbar-icon">smart_toy</mat-icon>
+    <span class="toolbar-title">{{ title() }}</span>
+  </mat-toolbar>
+  
+  <div class="app-content">
+    <app-chat></app-chat>
+  </div>
+</div>
 
 <router-outlet />
