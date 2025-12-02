@@ -11,5 +11,5 @@ import { ChatComponent } from './components/chat/chat.component';
   styleUrl: './app.scss'
 })
 export class App {
-  protected readonly title = signal('Claude Code Chat');
+  protected readonly title = signal('Claude Agent Chat');
 }

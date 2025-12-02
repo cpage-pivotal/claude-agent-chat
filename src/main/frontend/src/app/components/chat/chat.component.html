@@ -3,8 +3,7 @@
     @if (messages().length === 0) {
       <div class="welcome-message">
         <mat-icon class="welcome-icon">chat</mat-icon>
-        <h2>Claude Code Chat</h2>
-        <p>Ask me anything about your code!</p>
+        <h2>Claude Agent Chat</h2>
         @if (claudeAvailable()) {
           <p class="status-text">Claude Code CLI v{{ claudeVersion() }} is ready</p>
         } @else {
@@ -12,9 +11,9 @@
         }
       </div>
     }
-    
+
     @for (message of messages(); track message.timestamp) {
-      <div class="message" [class.user-message]="message.role === 'user'" 
+      <div class="message" [class.user-message]="message.role === 'user'"
            [class.assistant-message]="message.role === 'assistant'">
         <mat-card class="message-card" appearance="outlined">
           <mat-card-content>
