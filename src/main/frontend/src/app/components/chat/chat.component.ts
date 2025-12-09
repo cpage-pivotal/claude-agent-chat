@@ -6,6 +6,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatCardModule } from '@angular/material/card';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ChatService, ChatMessage } from '../../services/chat.service';
 import { MarkdownPipe } from '../../pipes/markdown.pipe';
 
@@ -20,6 +22,8 @@ import { MarkdownPipe } from '../../pipes/markdown.pipe';
     MatIconModule,
     MatProgressSpinnerModule,
     MatCardModule,
+    MatTooltipModule,
+    MatSnackBarModule,
     MarkdownPipe
   ],
   templateUrl: './chat.component.html',
@@ -34,8 +38,13 @@ export class ChatComponent {
   protected claudeAvailable = signal(true);
   protected claudeVersion = signal('');
   protected claudeMessage = signal('');
+  protected sessionId = signal<string | null>(null);
+  protected isCreatingSession = signal(false);
 
-  constructor(private chatService: ChatService) {
+  constructor(
+    private chatService: ChatService,
+    private snackBar: MatSnackBar
+  ) {
     // Check Claude Code availability on init
     this.chatService.checkHealth().then(health => {
       this.claudeAvailable.set(health.available);
@@ -51,11 +60,93 @@ export class ChatComponent {
         setTimeout(() => this.scrollToBottom(), 50);
       });
     });
+
+    // Automatically create a session on component init if Claude is available
+    effect(() => {
+      if (this.claudeAvailable() && !this.sessionId() && !this.isCreatingSession()) {
+        this.startNewConversation();
+      }
+    });
+  }
+
+  /**
+   * Start a new conversation session
+   */
+  protected async startNewConversation(): Promise<void> {
+    if (this.isCreatingSession()) {
+      return;
+    }
+
+    this.isCreatingSession.set(true);
+
+    try {
+      // Close existing session if any
+      const currentSessionId = this.sessionId();
+      if (currentSessionId) {
+        await this.chatService.closeSession(currentSessionId);
+      }
+
+      // Create new session
+      const newSessionId = await this.chatService.createSession();
+      this.sessionId.set(newSessionId);
+      
+      // Clear messages for new conversation
+      this.messages.set([]);
+      
+      this.snackBar.open('New conversation started', 'Close', {
+        duration: 2000,
+        horizontalPosition: 'center',
+        verticalPosition: 'bottom'
+      });
+      
+      console.log('Started new conversation with session:', newSessionId);
+    } catch (error) {
+      console.error('Failed to start new conversation:', error);
+      this.snackBar.open('Failed to start conversation', 'Close', {
+        duration: 3000,
+        horizontalPosition: 'center',
+        verticalPosition: 'bottom'
+      });
+      this.sessionId.set(null);
+    } finally {
+      this.isCreatingSession.set(false);
+    }
+  }
+
+  /**
+   * End the current conversation
+   */
+  protected async endConversation(): Promise<void> {
+    const currentSessionId = this.sessionId();
+    if (!currentSessionId) {
+      return;
+    }
+
+    try {
+      await this.chatService.closeSession(currentSessionId);
+      this.sessionId.set(null);
+      this.messages.set([]);
+      
+      this.snackBar.open('Conversation ended', 'Close', {
+        duration: 2000,
+        horizontalPosition: 'center',
+        verticalPosition: 'bottom'
+      });
+    } catch (error) {
+      console.error('Failed to end conversation:', error);
+      this.snackBar.open('Failed to end conversation', 'Close', {
+        duration: 3000,
+        horizontalPosition: 'center',
+        verticalPosition: 'bottom'
+      });
+    }
   }
 
   protected sendMessage(): void {
     const prompt = this.userInput().trim();
-    if (!prompt || this.isStreaming()) {
+    const currentSessionId = this.sessionId();
+    
+    if (!prompt || this.isStreaming() || !currentSessionId) {
       return;
     }
 
@@ -79,7 +170,7 @@ export class ChatComponent {
     this.messages.update(msgs => [...msgs, assistantMessage]);
 
     // Stream the response
-    this.chatService.sendMessage(prompt).subscribe({
+    this.chatService.sendMessage(prompt, currentSessionId).subscribe({
       next: (chunk: string) => {
         this.messages.update(msgs => {
           const lastMsg = msgs[msgs.length - 1];
@@ -97,20 +188,45 @@ export class ChatComponent {
       },
       error: (error) => {
         console.error('Chat error:', error);
-        this.messages.update(msgs => {
-          const lastMsg = msgs[msgs.length - 1];
-          if (lastMsg.role === 'assistant' && lastMsg.streaming) {
-            return [
-              ...msgs.slice(0, -1),
-              {
-                ...lastMsg,
-                content: lastMsg.content || 'Error: Failed to get response from Claude Code.',
-                streaming: false
-              }
-            ];
-          }
-          return msgs;
-        });
+        
+        const errorMessage = error.message || 'Failed to get response from Claude Code.';
+        
+        // Check if session expired
+        if (errorMessage.includes('Session not found') || errorMessage.includes('expired')) {
+          this.snackBar.open('Session expired. Starting new conversation...', 'Close', {
+            duration: 3000,
+            horizontalPosition: 'center',
+            verticalPosition: 'bottom'
+          });
+          
+          // Remove the failed assistant message
+          this.messages.update(msgs => msgs.slice(0, -1));
+          
+          // Start new conversation and resend message
+          this.startNewConversation().then(() => {
+            // Resend the message after new session is created
+            if (this.sessionId()) {
+              this.userInput.set(prompt);
+              setTimeout(() => this.sendMessage(), 500);
+            }
+          });
+        } else {
+          this.messages.update(msgs => {
+            const lastMsg = msgs[msgs.length - 1];
+            if (lastMsg.role === 'assistant' && lastMsg.streaming) {
+              return [
+                ...msgs.slice(0, -1),
+                {
+                  ...lastMsg,
+                  content: lastMsg.content || `Error: ${errorMessage}`,
+                  streaming: false
+                }
+              ];
+            }
+            return msgs;
+          });
+        }
+        
         this.isStreaming.set(false);
       },
       complete: () => {

@@ -15,6 +15,57 @@
   gap: var(--mat-sys-spacing-4, 16px);
 }
 
+.chat-header {
+  background-color: var(--mat-sys-surface-container);
+  border-radius: var(--mat-sys-corner-large, 16px);
+  padding: var(--mat-sys-spacing-3, 12px) var(--mat-sys-spacing-4, 16px);
+  
+  .header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--mat-sys-spacing-3, 12px);
+  }
+  
+  .session-info {
+    display: flex;
+    align-items: center;
+    gap: var(--mat-sys-spacing-2, 8px);
+    flex: 1;
+    min-width: 0; // Allow text truncation
+    
+    .session-icon {
+      color: var(--mat-sys-primary);
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+    }
+    
+    .session-text {
+      display: flex;
+      flex-direction: column;
+      gap: var(--mat-sys-spacing-1, 4px);
+      font: var(--mat-sys-body-medium);
+      color: var(--mat-sys-on-surface);
+      
+      strong {
+        font-weight: 600;
+      }
+      
+      .session-id {
+        font: var(--mat-sys-body-small);
+        color: var(--mat-sys-on-surface-variant);
+        font-family: 'Roboto Mono', monospace;
+      }
+    }
+  }
+  
+  .session-actions {
+    display: flex;
+    gap: var(--mat-sys-spacing-1, 4px);
+  }
+}
+
 .messages-container {
   flex: 1;
   overflow-y: auto;
@@ -66,6 +117,10 @@
     
     &.error {
       color: var(--mat-sys-error);
+    }
+    
+    &.info {
+      color: var(--mat-sys-primary);
     }
   }
 }
