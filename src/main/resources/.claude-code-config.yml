@@ -6,9 +6,14 @@ claudeCode:
 
   settings:
     alwaysThinkingEnabled: true
+    permissions:
+      deny:
+        # Block specific MCP tools
+        - "mcp__github__create_repository"
+        - "mcp__github__delete_file"
+        - "mcp__github__merge_pull_request"
 
   mcpServers:
     - name: github
       type: sse
       url: "https://github-mcp-server.apps.tas-ndc.kuhn-labs.com/sse"
-
