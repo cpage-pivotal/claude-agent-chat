@@ -1,4 +1,41 @@
 <div class="chat-container">
+  <!-- Header with session controls -->
+  <div class="chat-header">
+    <div class="header-content">
+      <div class="session-info">
+        <mat-icon class="session-icon">chat_bubble</mat-icon>
+        <span class="session-text">
+          @if (sessionId()) {
+            <strong>Active Conversation</strong>
+            <span class="session-id">Session: {{ sessionId()?.substring(0, 8) }}...</span>
+          } @else {
+            <strong>No Active Session</strong>
+          }
+        </span>
+      </div>
+      <div class="session-actions">
+        <button
+          mat-icon-button
+          (click)="startNewConversation()"
+          [disabled]="isCreatingSession() || !claudeAvailable()"
+          matTooltip="Start new conversation"
+          color="primary"
+        >
+          <mat-icon>add_circle</mat-icon>
+        </button>
+        <button
+          mat-icon-button
+          (click)="endConversation()"
+          [disabled]="!sessionId() || isStreaming()"
+          matTooltip="End current conversation"
+          color="warn"
+        >
+          <mat-icon>stop_circle</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div class="messages-container" #messagesContainer>
     @if (messages().length === 0) {
       <div class="welcome-message">
@@ -6,6 +43,11 @@
         <h2>Claude Agent Chat</h2>
         @if (claudeAvailable()) {
           <p class="status-text">Claude Code CLI v{{ claudeVersion() }} is ready</p>
+          @if (sessionId()) {
+            <p class="status-text info">Conversation session active - Claude will remember your conversation context</p>
+          } @else if (isCreatingSession()) {
+            <p class="status-text info">Starting new conversation...</p>
+          }
         } @else {
           <p class="status-text error">{{ claudeMessage() || 'Claude Code CLI is not available' }}</p>
         }
@@ -41,7 +83,7 @@
         [value]="userInput()"
         (input)="onInputChange($event)"
         (keypress)="onKeyPress($event)"
-        [disabled]="isStreaming() || !claudeAvailable()"
+        [disabled]="isStreaming() || !claudeAvailable() || !sessionId()"
         rows="3"
         placeholder="Ask Claude about your code..."
       ></textarea>
@@ -51,7 +93,7 @@
       extended
       color="primary"
       (click)="sendMessage()"
-      [disabled]="!userInput().trim() || isStreaming() || !claudeAvailable()"
+      [disabled]="!userInput().trim() || isStreaming() || !claudeAvailable() || !sessionId()"
       class="send-button"
     >
       @if (isStreaming()) {

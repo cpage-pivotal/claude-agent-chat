@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { Observable } from 'rxjs';
 
 export interface ChatMessage {
@@ -8,24 +8,74 @@ export interface ChatMessage {
   streaming?: boolean;
 }
 
+export interface SessionInfo {
+  sessionId: string;
+  createdAt: Date;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class ChatService {
   private readonly apiUrl = '/api/chat';
+  private currentSession = signal<SessionInfo | null>(null);
 
-  sendMessage(prompt: string): Observable<string> {
+  /**
+   * Get the current active session
+   */
+  getCurrentSession(): SessionInfo | null {
+    return this.currentSession();
+  }
+
+  /**
+   * Create a new conversation session
+   */
+  async createSession(model?: string, timeoutMinutes?: number): Promise<string> {
+    const body: any = {};
+    if (model) body.model = model;
+    if (timeoutMinutes) body.sessionInactivityTimeoutMinutes = timeoutMinutes;
+
+    const response = await fetch(`${this.apiUrl}/sessions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: Object.keys(body).length > 0 ? JSON.stringify(body) : undefined
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to create session: ${response.status}`);
+    }
+
+    const result = await response.json();
+    if (!result.success || !result.sessionId) {
+      throw new Error(result.message || 'Failed to create session');
+    }
+
+    this.currentSession.set({
+      sessionId: result.sessionId,
+      createdAt: new Date()
+    });
+
+    console.log('Created new conversation session:', result.sessionId);
+    return result.sessionId;
+  }
+
+  /**
+   * Send a message to the current session
+   */
+  sendMessage(message: string, sessionId: string): Observable<string> {
     return new Observable(observer => {
       let reader: ReadableStreamDefaultReader<Uint8Array> | null = null;
       let buffer = '';
 
-      // Create POST request to send the prompt
-      fetch(`${this.apiUrl}/stream`, {
+      // Create POST request to send the message
+      fetch(`${this.apiUrl}/sessions/${sessionId}/messages`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ prompt })
+        body: JSON.stringify({ message })
       })
       .then(response => {
         if (!response.ok) {
@@ -92,6 +142,48 @@ export class ChatService {
         }
       };
     });
+  }
+
+  /**
+   * Close the current conversation session
+   */
+  async closeSession(sessionId: string): Promise<void> {
+    try {
+      const response = await fetch(`${this.apiUrl}/sessions/${sessionId}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        console.warn(`Failed to close session ${sessionId}: ${response.status}`);
+      }
+
+      const currentSessionInfo = this.currentSession();
+      if (currentSessionInfo && currentSessionInfo.sessionId === sessionId) {
+        this.currentSession.set(null);
+      }
+
+      console.log('Closed conversation session:', sessionId);
+    } catch (error) {
+      console.error('Error closing session:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Check if a session is active
+   */
+  async checkSessionStatus(sessionId: string): Promise<boolean> {
+    try {
+      const response = await fetch(`${this.apiUrl}/sessions/${sessionId}/status`);
+      if (!response.ok) {
+        return false;
+      }
+      const result = await response.json();
+      return result.active;
+    } catch (error) {
+      console.error('Error checking session status:', error);
+      return false;
+    }
   }
 
   checkHealth(): Promise<{ available: boolean; version: string; message?: string }> {
