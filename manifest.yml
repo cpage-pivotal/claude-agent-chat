@@ -5,9 +5,8 @@ applications:
     memory: 3G
     buildpacks:
       - nodejs_buildpack
-      - https://github.com/cpage-pivotal/claude-code-buildpack
+      - https://github.com/cpage-pivotal/claude-code-buildpack#claude/add-oauth-token-support-011sKtq2v1Pxvf8QWdm2id7M
       - java_buildpack_offline
     env:
       JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 21.+ } }'
-      # Required: Anthropic API Key for Claude Code CLI
-      ANTHROPIC_API_KEY: ((ANTHROPIC_API_KEY))
+      CLAUDE_CODE_OAUTH_TOKEN: ((CLAUDE_CODE_OAUTH_TOKEN))
