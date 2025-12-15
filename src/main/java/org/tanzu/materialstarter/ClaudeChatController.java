@@ -17,6 +17,9 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * REST controller for managing conversational chat sessions with Claude Code CLI.
@@ -113,7 +116,7 @@ public class ClaudeChatController {
             @RequestBody SendMessageRequest request) {
         logger.info("Sending message to session {}: {} chars", sessionId, request.message().length());
         
-        SseEmitter emitter = new SseEmitter(300_000L); // 5 minutes timeout
+        SseEmitter emitter = new SseEmitter(600_000L); // 10 minutes timeout
         
         executorService.execute(() -> {
             try {
@@ -135,10 +138,36 @@ public class ClaudeChatController {
                     return;
                 }
 
-                // Send message using conversation session (blocking mode for now)
-                // Note: Streaming conversation sessions are a future enhancement in claude-code-cf-wrapper
+                // Send initial status event to confirm processing started
+                emitter.send(SseEmitter.event()
+                    .name("status")
+                    .data("Processing your request..."));
+
+                // Send message using conversation session with heartbeat support
+                // The Claude CLI call is blocking, so we submit it to a future and poll for completion
+                // while sending heartbeat events to keep the connection alive through proxies/load balancers
                 try {
-                    String response = executor.sendMessage(sessionId, request.message());
+                    Future<String> future = executorService.submit(() -> 
+                        executor.sendMessage(sessionId, request.message())
+                    );
+
+                    // Send heartbeat messages every 30 seconds while waiting for response
+                    // This prevents Cloudflare and other proxies from timing out the connection
+                    long heartbeatIntervalMs = 30_000L; // 30 seconds
+                    String response;
+                    
+                    while (true) {
+                        try {
+                            response = future.get(heartbeatIntervalMs, TimeUnit.MILLISECONDS);
+                            break; // Got the response, exit loop
+                        } catch (TimeoutException e) {
+                            // Still waiting for Claude - send heartbeat to keep connection alive
+                            emitter.send(SseEmitter.event()
+                                .name("heartbeat")
+                                .data("Still processing..."));
+                            logger.info("Sent heartbeat for session {}", sessionId);
+                        }
+                    }
                     
                     // Split response into lines for streaming effect
                     String[] lines = response.split("\n");

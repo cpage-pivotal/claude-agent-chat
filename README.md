@@ -5,6 +5,7 @@ A full-stack web application that provides a chat interface for interacting with
 ## Features
 
 - **Real-time Chat Interface** - Interactive chat with Claude Code using Server-Sent Events (SSE) for streaming responses
+- **Heartbeat Keep-Alive** - Automatic heartbeat messages every 30 seconds prevent proxy/CDN timeouts (e.g., Cloudflare's 2-minute timeout)
 - **Modern UI** - Material Design 3 interface with Angular 20
 - **Markdown Support** - Renders Claude's responses with proper markdown formatting
 - **Health Monitoring** - Built-in health checks to verify Claude Code CLI availability
@@ -138,6 +139,7 @@ claude-code.controller-enabled=false
 
 - **Java 21** with modern features (records, virtual threads)
 - **SSE Streaming** via `SseEmitter` for real-time responses
+- **Heartbeat Keep-Alive** - Sends periodic heartbeat events every 30 seconds to prevent connection timeouts in Cloud Foundry, Cloudflare, and other proxies
 - **claude-code-cf-wrapper** library for Claude Code CLI integration
 - **Virtual Threads** for efficient concurrent request handling
 
@@ -200,6 +202,16 @@ The application will be available at `http://localhost:8080`
 - Karma & Jasmine (testing)
 
 ## Troubleshooting
+
+### Cloudflare or Proxy Timeout Issues
+
+If deploying behind Cloudflare or other proxies with connection timeouts (e.g., 2 minutes), the application automatically sends heartbeat events every 30 seconds to keep the connection alive. This prevents timeouts even when Claude takes several minutes to respond. The heartbeat messages are:
+
+- Sent as SSE events with `event: heartbeat` and `event: status`
+- Automatically filtered out by the frontend (not displayed to users)
+- Logged in the browser console for debugging: `[SSE heartbeat] Still processing...`
+
+The SSE emitter timeout is set to 10 minutes, which should be sufficient for most Claude operations.
 
 ### Claude Code CLI Not Found
 

@@ -114,12 +114,22 @@ export class ChatService {
                 if (data.startsWith(' ')) {
                   data = data.substring(1);
                 }
+                
+                // Handle different event types
                 if (currentEvent === 'error') {
                   observer.error(new Error(data));
                   return;
+                } else if (currentEvent === 'heartbeat' || currentEvent === 'status') {
+                  // Ignore heartbeat and status events - they're just for keeping connection alive
+                  // Log them for debugging purposes (using console.log so they're visible by default)
+                  console.log(`[SSE ${currentEvent}]`, data);
+                  currentEvent = ''; // Reset after processing
+                  continue;
+                } else if (currentEvent === 'message' || currentEvent === '') {
+                  // Emit message data to the observer
+                  observer.next(data);
                 }
-                // Emit the data (could be empty for blank lines)
-                observer.next(data);
+                
                 currentEvent = ''; // Reset after processing
               }
             }
