@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.5</version>
+        <version>3.5.9</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>org.tanzu</groupId>
@@ -45,8 +45,9 @@
         <dependency>
             <groupId>org.tanzu.claudecode</groupId>
             <artifactId>claude-code-cf-wrapper</artifactId>
-            <version>1.1.1</version>
+            <version>1.2.0</version>
         </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
