@@ -1,5 +1,5 @@
 import { Component, signal, effect, ViewChild, ElementRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -15,7 +15,6 @@ import { MarkdownPipe } from '../../pipes/markdown.pipe';
   selector: 'app-chat',
   standalone: true,
   imports: [
-    CommonModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
@@ -25,7 +24,7 @@ import { MarkdownPipe } from '../../pipes/markdown.pipe';
     MatTooltipModule,
     MatSnackBarModule,
     MarkdownPipe
-  ],
+],
   templateUrl: './chat.component.html',
   styleUrl: './chat.component.scss'
 })
